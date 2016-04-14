@@ -46,6 +46,11 @@ static CGFloat const kSectionEdgeInsetsRight = 15;
  */
 @property (nonatomic, copy) KDS_TagModel *recoderSelectSingleModel;
 
+/**
+ *  记录最初的list，用于比对
+ */
+@property (nonatomic, strong) NSMutableArray *recoderSelectList;
+
 @end
 
 @implementation KDS_TagMenuView
@@ -126,8 +131,8 @@ UIColor * kds_RGBColor(CGFloat red, CGFloat green, CGFloat blue, CGFloat alpha) 
         selectSingle = YES;
     }
     
-    // 手动判断是否发生了变化
-    BOOL hasChanged;
+    // 判断是否发生了变化
+    BOOL hasChanged = [self compareOldArray:self.recoderSelectList withArray:self.selectedList];
     
     if (_completionBlock) {
         _completionBlock(selectSingle, _recoderSelectSingleModel, hasChanged, _selectedList);
@@ -311,8 +316,25 @@ UIColor * kds_RGBColor(CGFloat red, CGFloat green, CGFloat blue, CGFloat alpha) 
         [self.unSelectedList removeObject:m];
         return index;
     }
-    
     return [self.unSelectedList count]+1;
+}
+
+- (BOOL)compareOldArray:(NSArray *)oldArray withArray:(NSArray *)newArray {
+    BOOL hasChanged = NO;
+    
+    if (oldArray.count != newArray.count) {
+        hasChanged = YES;
+    } else {
+        for (int i = 0; i < oldArray.count; i++) {
+            KDS_TagModel *modelOld = oldArray[i];
+            KDS_TagModel *modelNew = newArray[i];
+            if (![modelOld.text isEqualToString:modelNew.text]) {
+                hasChanged = YES;
+                break;
+            }
+        }
+    }
+    return hasChanged;
 }
 
 #pragma mark - getter
@@ -388,6 +410,7 @@ UIColor * kds_RGBColor(CGFloat red, CGFloat green, CGFloat blue, CGFloat alpha) 
 
 - (void)setSelectedList:(NSMutableArray *)selectedList {
     _selectedList = selectedList.mutableCopy;
+    _recoderSelectList = selectedList.copy;
 }
 
 @end
